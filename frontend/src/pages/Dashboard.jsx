@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import Chatbot from "../components/Chatbot";
 
 export default function Dashboard({ onLogout }) {
   const navigate = useNavigate();
@@ -22,6 +23,10 @@ export default function Dashboard({ onLogout }) {
       >
         Başvuru Yap
       </button>
+
+      <div className="fixed bottom-6 right-6">
+        <Chatbot />
+      </div>
     </div>
   );
 }
