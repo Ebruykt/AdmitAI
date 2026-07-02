@@ -5,6 +5,7 @@ from core.database import get_db
 from models.document import Document
 from services.storage import upload_file
 from services.ocr import extract_text
+from services.document_check import check_document
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -31,6 +32,19 @@ async def upload_document(
     if file.content_type in ["image/jpeg", "image/png"]:
         ocr_text = extract_text(content)
 
+    check_result = None
+    if ocr_text:
+        check_result = check_document(doc_type, ocr_text)
+
+    doc = Document(
+        application_id=application_id, doc_type=doc_type,
+        file_url=url, ocr_text=ocr_text,
+        is_valid=check_result["is_readable"] if check_result else False
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return doc
     doc = Document(
         application_id=application_id, doc_type=doc_type,
         file_url=url, ocr_text=ocr_text

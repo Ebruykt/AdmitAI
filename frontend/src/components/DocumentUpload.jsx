@@ -68,7 +68,11 @@ export default function DocumentUpload({ applicationId }) {
                 <span className="text-gray-400 text-sm">Yükleniyor...</span>
               )}
               {uploaded[d.key] && !uploading[d.key] && (
-                <span className="text-teal-600 text-sm font-medium">✓ Yüklendi</span>
+                <span className={`text-sm font-medium ${
+                  uploaded[d.key].is_valid ? "text-teal-600" : "text-amber-600"
+                }`}>
+                  {uploaded[d.key].is_valid ? "✓ Doğrulandı" : "⚠ Kontrol edilmeli"}
+                </span>
               )}
               <input
                 type="file"
