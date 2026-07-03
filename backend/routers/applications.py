@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from core.database import get_db
 from core.security import get_current_user
-from models.application import Application
 from datetime import datetime
 from models.document import Document
+from services.evaluation import evaluate_application
+from models.application import Application, ProgramChoice
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 REQUIRED_DOCS = ["diploma", "transcript", "passport"]
@@ -37,6 +38,8 @@ class ApplicationResponse(BaseModel):
     district: str | None = None
     address: str | None = None
     phone: str | None = None
+    ai_score: float | None = None
+    ai_summary: str | None = None
 
     class Config:
         from_attributes = True
@@ -143,10 +146,34 @@ def submit_application(app_id: int, db: Session = Depends(get_db)):
     missing = check_missing(app_id, db)
     if not missing["complete"]:
         raise HTTPException(400, f"Eksik belgeler var: {missing['missing']}")
+
     app_ = db.query(Application).filter(Application.id == app_id).first()
     if not app_:
         raise HTTPException(404, "Başvuru bulunamadı")
+
+    top_choice = db.query(ProgramChoice).filter(
+        ProgramChoice.application_id == app_id
+    ).order_by(ProgramChoice.priority_order).first()
+
+    app_data = {
+        "name": f"{app_.first_name} {app_.last_name}",
+        "nationality": app_.nationality,
+        "gpa": app_.gpa,
+        "high_school": app_.high_school_name,
+        "preferred_program": top_choice.program_name if top_choice else None,
+        "faculty": top_choice.faculty if top_choice else None,
+    }
+    result = evaluate_application(app_data)
+
+    app_.ai_score = result["score"]
+    app_.ai_summary = result["summary"]
     app_.status = "submitted"
     db.commit()
     db.refresh(app_)
     return app_
+
+@router.get("/staff/all")
+def all_applications_for_staff(db: Session = Depends(get_db)):
+    return db.query(Application).filter(
+        Application.status == "submitted"
+    ).order_by(Application.ai_score.desc()).all()
