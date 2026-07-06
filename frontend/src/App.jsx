@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Application from "./pages/Application";
+import AdminPanel from "./pages/AdminPanel";
+
 
 function App() {
   const [isAuth, setIsAuth] = useState(!!localStorage.getItem("token"));
@@ -16,6 +18,7 @@ function App() {
         <Route path="/dashboard" element={isAuth ? <Dashboard onLogout={() => setIsAuth(false)} /> : <Navigate to="/login" />} />
         <Route path="/application" element={isAuth ? <Application /> : <Navigate to="/login" />} />
         <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
   );

@@ -11,13 +11,16 @@ export default function Login({ onLogin}) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post("/auth/login", { email, password });
-      localStorage.setItem("token", res.data.access_token);
-      onLogin();
-      navigate("/dashboard");
-    } catch {
-      setError("Email veya şifre hatalı");
-    }
+        const res = await api.post("/auth/login", { email, password });
+        localStorage.setItem("token", res.data.access_token);
+        if (res.data.user.role === "staff") {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      } catch {
+        setError("Email veya şifre hatalı");
+      }
   };
 
   return (

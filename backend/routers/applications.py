@@ -7,6 +7,7 @@ from datetime import datetime
 from models.document import Document
 from services.evaluation import evaluate_application
 from models.application import Application, ProgramChoice
+from core.security import require_staff
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 REQUIRED_DOCS = ["diploma", "transcript", "passport"]
@@ -173,7 +174,8 @@ def submit_application(app_id: int, db: Session = Depends(get_db)):
     return app_
 
 @router.get("/staff/all")
-def all_applications_for_staff(db: Session = Depends(get_db)):
-    return db.query(Application).filter(
-        Application.status == "submitted"
-    ).order_by(Application.ai_score.desc()).all()
+def all_applications_for_staff(
+    status: str = None, db: Session = Depends(get_db), staff=Depends(require_staff)
+):
+    query = db.query(Application).filter(Application.status == "submitted") if not status else db.query(Application).filter(Application.status == status)
+    return query.order_by(Application.ai_score.desc()).all()

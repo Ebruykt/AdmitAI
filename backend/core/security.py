@@ -34,3 +34,8 @@ def get_current_user(token=Depends(oauth2_scheme), db: Session = Depends(get_db)
     if not user:
         raise HTTPException(401, "Kullanıcı bulunamadı")
     return user
+
+def require_staff(user=Depends(get_current_user)):
+    if user.role != "staff":
+        raise HTTPException(403, "Bu işlem için personel yetkisi gerekiyor")
+    return user
