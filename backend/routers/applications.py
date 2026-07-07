@@ -179,3 +179,22 @@ def all_applications_for_staff(
 ):
     query = db.query(Application).filter(Application.status == "submitted") if not status else db.query(Application).filter(Application.status == status)
     return query.order_by(Application.ai_score.desc()).all()
+
+@router.get("/{app_id}/full")
+def get_full_application(
+    app_id: int, db: Session = Depends(get_db), staff=Depends(require_staff)
+):
+    app_ = db.query(Application).filter(Application.id == app_id).first()
+    if not app_:
+        raise HTTPException(404, "Başvuru bulunamadı")
+
+    documents = db.query(Document).filter(
+        Document.application_id == app_id).all()
+    choices = db.query(ProgramChoice).filter(
+        ProgramChoice.application_id == app_id).all()
+
+    return {
+        "application": app_,
+        "documents": documents,
+        "choices": choices
+    }

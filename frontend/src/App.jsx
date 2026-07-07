@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Application from "./pages/Application";
 import AdminPanel from "./pages/AdminPanel";
+import ApplicationDetail from "./pages/ApplicationDetail";
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/application" element={isAuth ? <Application /> : <Navigate to="/login" />} />
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/applications/:id" element={<ApplicationDetail />} />
       </Routes>
     </BrowserRouter>
   );
