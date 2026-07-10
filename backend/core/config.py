@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     minio_endpoint: str
     minio_access_key: str
     minio_secret_key: str
+    mail_username: str
+    mail_password: str
 
     class Config:
         env_file = ".env"

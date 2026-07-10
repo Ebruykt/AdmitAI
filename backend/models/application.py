@@ -27,6 +27,7 @@ class Application(Base):
     ai_score = Column(Float, nullable=True)
     ai_summary = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
+    staff_note = Column(String, nullable=True)
 
 class ProgramChoice(Base):
     __tablename__ = "program_choices"

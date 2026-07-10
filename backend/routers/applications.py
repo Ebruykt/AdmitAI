@@ -8,6 +8,8 @@ from models.document import Document
 from services.evaluation import evaluate_application
 from models.application import Application, ProgramChoice
 from core.security import require_staff
+from models.user import User
+from services.email import send_decision_email
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 REQUIRED_DOCS = ["diploma", "transcript", "passport"]
@@ -41,6 +43,7 @@ class ApplicationResponse(BaseModel):
     phone: str | None = None
     ai_score: float | None = None
     ai_summary: str | None = None
+    staff_note: str | None = None
 
     class Config:
         from_attributes = True
@@ -198,3 +201,30 @@ def get_full_application(
         "documents": documents,
         "choices": choices
     }
+
+class DecisionRequest(BaseModel):
+    decision: str
+    note: str | None = None
+
+@router.put("/{app_id}/decision", response_model=ApplicationResponse)
+async def make_decision(
+    app_id: int, data: DecisionRequest,
+    db: Session = Depends(get_db), staff=Depends(require_staff)
+):
+    if data.decision not in ["approved", "rejected"]:
+        raise HTTPException(400, "Geçersiz karar")
+
+    app_ = db.query(Application).filter(Application.id == app_id).first()
+    if not app_:
+        raise HTTPException(404, "Başvuru bulunamadı")
+
+    app_.status = data.decision
+    app_.staff_note = data.note
+    db.commit()
+    db.refresh(app_)
+
+    user = db.query(User).filter(User.id == app_.user_id).first()
+    if user:
+        await send_decision_email(user.email, data.decision, data.note)
+
+    return app_
